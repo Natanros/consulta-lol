@@ -1,0 +1,27 @@
+/* Layout Styles - Main App Structure */
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--gradient-primary, linear-gradient(135deg, #0F2027 0%, #203A43 50%, #2C5364 100%));
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 70px;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+  }
+}
+
+/* Adjustments for content */
+.main-content > * {
+  max-width: 100%;
+}

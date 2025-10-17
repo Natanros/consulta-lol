@@ -1,0 +1,20 @@
+{
+  "short_name": "Consulta LoL",
+  "name": "Consulta League of Legends",
+  "icons": [
+    {
+      "src": "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/league_icon_flat.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/league_icon_flat.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#C89B3C",
+  "background_color": "#0A0E14"
+}
