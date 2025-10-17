@@ -29,16 +29,32 @@ module.exports = async (req, res) => {
     });
   }
 
+  // Extrair path da URL
+  // req.query.path pode ser string ou array dependendo do Vercel
   const { path } = req.query;
-  const endpoint = path ? path.join("/") : "";
+  let endpoint = "";
+
+  if (Array.isArray(path)) {
+    endpoint = path.join("/");
+  } else if (typeof path === "string") {
+    endpoint = path;
+  } else if (req.url) {
+    // Fallback: extrair do URL diretamente
+    const match = req.url.match(/\/api\/(.+)/);
+    endpoint = match ? match[1] : "";
+  }
+
+  console.log(`📍 Endpoint recebido: ${endpoint}`);
+  console.log(`🔗 URL completa: ${req.url}`);
 
   try {
     // Health check
-    if (endpoint === "health") {
+    if (endpoint === "health" || endpoint === "") {
       return res.json({
         status: "ok",
         message: "Proxy funcionando!",
         timestamp: new Date().toISOString(),
+        endpoint: endpoint || "root",
       });
     }
 
@@ -125,9 +141,29 @@ module.exports = async (req, res) => {
     }
 
     // Endpoint não encontrado
+    console.log(`❌ Endpoint não encontrado: ${endpoint}`);
+    console.log(`📋 Endpoints disponíveis:`);
+    console.log(`   - health`);
+    console.log(`   - account/:gameName/:tagLine`);
+    console.log(`   - summoner/by-puuid/:puuid`);
+    console.log(`   - rotation`);
+    console.log(`   - champion-mastery/:puuid`);
+    console.log(`   - match-history/:puuid`);
+    console.log(`   - match/:matchId`);
+
     return res.status(404).json({
       error: "Endpoint não encontrado",
       path: endpoint,
+      url: req.url,
+      availableEndpoints: [
+        "health",
+        "account/:gameName/:tagLine",
+        "summoner/by-puuid/:puuid",
+        "rotation",
+        "champion-mastery/:puuid",
+        "match-history/:puuid",
+        "match/:matchId",
+      ],
     });
   } catch (error) {
     console.error("Erro no proxy:", error.message);
