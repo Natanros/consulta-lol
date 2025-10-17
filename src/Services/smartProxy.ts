@@ -5,7 +5,7 @@ import {
   checkProxyHealth,
 } from "./localProxy";
 import { searchSummoner as searchSummonerPublic } from "./simpleSummoner";
-import { getWeeklyRotation as getWeeklyRotationPublic } from "./riotAPICORS";
+import { getWeeklyRotationSimple as getWeeklyRotationPublic } from "./riotAPISimple";
 
 // Cache para verificação de disponibilidade do proxy
 let proxyAvailable: boolean | null = null;
