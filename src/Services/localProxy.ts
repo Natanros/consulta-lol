@@ -14,6 +14,7 @@ interface SummonerData {
 // Função para buscar dados com o proxy local
 const fetchWithLocalProxy = async (endpoint: string) => {
   console.log(`🌐 Fazendo requisição para proxy local: ${endpoint}`);
+  console.log(`📍 URL do proxy: ${PROXY_URL}`);
 
   try {
     const response = await fetch(`${PROXY_URL}${endpoint}`, {
@@ -21,6 +22,8 @@ const fetchWithLocalProxy = async (endpoint: string) => {
       headers: {
         "Content-Type": "application/json",
       },
+      // Timeout para evitar espera infinita
+      signal: AbortSignal.timeout(5000), // 5 segundos
     });
 
     if (!response.ok) {
@@ -33,6 +36,12 @@ const fetchWithLocalProxy = async (endpoint: string) => {
     return data;
   } catch (error: any) {
     console.error("❌ Erro ao comunicar com proxy local:", error);
+
+    // Se for erro de conexão recusada, mensagem mais clara
+    if (error.name === "TypeError" && error.message.includes("fetch")) {
+      throw new Error("Proxy local não está rodando. Execute: pnpm run proxy");
+    }
+
     throw error;
   }
 };
@@ -219,15 +228,27 @@ export const isValidRiotId = (riotId: string): boolean => {
 export const checkProxyHealth = async (): Promise<boolean> => {
   try {
     console.log(`🔍 Verificando saúde do proxy em: ${PROXY_URL}/health`);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 segundos timeout
+
     const response = await fetch(`${PROXY_URL}/health`, {
       method: "GET",
       cache: "no-cache",
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
+
     const isHealthy = response.ok;
     console.log(`🏥 Proxy health check: ${isHealthy ? "✅ OK" : "❌ FALHOU"}`);
     return isHealthy;
-  } catch (error) {
-    console.error("❌ Proxy local não está disponível:", error);
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      console.error("⏱️ Timeout ao verificar proxy local (não está rodando)");
+    } else {
+      console.error("❌ Proxy local não está disponível:", error.message);
+    }
     return false;
   }
 };

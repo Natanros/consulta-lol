@@ -1,4 +1,4 @@
-// Serviço inteligente que escolhe automaticamente entre proxy local ou proxies públicos
+// Serviço inteligente que escolhe automaticamente entre proxy local, API Vercel ou proxies públicos
 import {
   searchSummonerLocal,
   getWeeklyRotationLocal,
@@ -12,8 +12,26 @@ let proxyAvailable: boolean | null = null;
 let lastProxyCheck = 0;
 const PROXY_CHECK_INTERVAL = 30000; // 30 segundos
 
+// Detectar ambiente
+const isProduction =
+  window.location.hostname !== "localhost" &&
+  window.location.hostname !== "127.0.0.1";
+const isLocalDevelopment = !isProduction;
+
+console.log(
+  `🌍 Ambiente detectado: ${
+    isProduction ? "PRODUÇÃO (Vercel)" : "DESENVOLVIMENTO (Localhost)"
+  }`
+);
+
 // Função para verificar disponibilidade do proxy local
 const isProxyAvailable = async (): Promise<boolean> => {
+  // Em produção (Vercel), NUNCA usar proxy local
+  if (isProduction) {
+    console.log("🌐 Ambiente de produção detectado - usando APIs públicas");
+    return false;
+  }
+
   const now = Date.now();
 
   // Se já verificamos recentemente, usar cache
@@ -21,7 +39,7 @@ const isProxyAvailable = async (): Promise<boolean> => {
     return proxyAvailable;
   }
 
-  // Verificar disponibilidade do proxy
+  // Verificar disponibilidade do proxy local apenas em desenvolvimento
   try {
     proxyAvailable = await checkProxyHealth();
     lastProxyCheck = now;
@@ -29,12 +47,12 @@ const isProxyAvailable = async (): Promise<boolean> => {
     if (proxyAvailable) {
       console.log("✅ Proxy local disponível - usando proxy local");
     } else {
-      console.log("⚠️ Proxy local não disponível - usando proxies públicos");
+      console.log("⚠️ Proxy local não disponível - usando APIs públicas");
     }
 
     return proxyAvailable;
   } catch (error) {
-    console.log("⚠️ Erro ao verificar proxy local - usando proxies públicos");
+    console.log("⚠️ Erro ao verificar proxy local - usando APIs públicas");
     proxyAvailable = false;
     lastProxyCheck = now;
     return false;
