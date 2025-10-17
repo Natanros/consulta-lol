@@ -4,6 +4,11 @@ import {
   getWeeklyRotationLocal,
   checkProxyHealth,
 } from "./localProxy";
+import {
+  searchSummonerVercel,
+  getWeeklyRotationVercel,
+  checkVercelAPIHealth,
+} from "./vercelAPI";
 import { searchSummoner as searchSummonerPublic } from "./simpleSummoner";
 import { getWeeklyRotationSimple as getWeeklyRotationPublic } from "./riotAPISimple";
 
@@ -61,26 +66,50 @@ const isProxyAvailable = async (): Promise<boolean> => {
 
 // Função inteligente para buscar invocador
 export const searchSummoner = async (riotId: string) => {
+  // Em produção (Vercel), usar API Vercel
+  if (isProduction) {
+    console.log("🚀 Usando API Vercel para buscar invocador");
+    try {
+      return await searchSummonerVercel(riotId);
+    } catch (error) {
+      console.log("⚠️ Erro na API Vercel, tentando APIs públicas...");
+      return await searchSummonerPublic(riotId);
+    }
+  }
+
+  // Em desenvolvimento, tentar proxy local primeiro
   const useLocalProxy = await isProxyAvailable();
 
   if (useLocalProxy) {
     console.log("🚀 Usando proxy local para buscar invocador");
     return await searchSummonerLocal(riotId);
   } else {
-    console.log("🌐 Usando proxies públicos para buscar invocador");
+    console.log("🌐 Usando APIs públicas para buscar invocador");
     return await searchSummonerPublic(riotId);
   }
 };
 
 // Função inteligente para buscar rotação semanal
 export const getWeeklyRotation = async () => {
+  // Em produção (Vercel), usar API Vercel
+  if (isProduction) {
+    console.log("🚀 Usando API Vercel para buscar rotação");
+    try {
+      return await getWeeklyRotationVercel();
+    } catch (error) {
+      console.log("⚠️ Erro na API Vercel, tentando APIs públicas...");
+      return await getWeeklyRotationPublic();
+    }
+  }
+
+  // Em desenvolvimento, tentar proxy local primeiro
   const useLocalProxy = await isProxyAvailable();
 
   if (useLocalProxy) {
     console.log("🚀 Usando proxy local para buscar rotação");
     return await getWeeklyRotationLocal();
   } else {
-    console.log("🌐 Usando proxies públicos para buscar rotação");
+    console.log("🌐 Usando APIs públicas para buscar rotação");
     return await getWeeklyRotationPublic();
   }
 };
