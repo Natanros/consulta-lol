@@ -34,6 +34,12 @@ const formatTimeAgo = (timestamp: number): string => {
   return 'Agora';
 };
 
+interface ErrorInfo {
+  message: string;
+  type?: string;
+  suggestions?: string[];
+}
+
 const SimpleSummoner: React.FC = () => {
   const [riotId, setRiotId] = useState('');
   const [summoner, setSummoner] = useState<any>(null);
@@ -41,7 +47,7 @@ const SimpleSummoner: React.FC = () => {
   const [matchHistory, setMatchHistory] = useState<MatchDetail[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingExtra, setLoadingExtra] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ErrorInfo | null>(null);
 
   // Inicializar cache de campeões ao montar o componente
   useEffect(() => {
@@ -50,7 +56,11 @@ const SimpleSummoner: React.FC = () => {
 
   const handleSearch = async () => {
     if (!riotId.trim()) {
-      setError('Por favor, digite um Riot ID válido');
+      setError({
+        message: 'Por favor, digite um Riot ID válido',
+        type: 'VALIDATION_ERROR',
+        suggestions: ['Digite o Riot ID no formato: Nome#TAG']
+      });
       return;
     }
     
@@ -130,7 +140,12 @@ const SimpleSummoner: React.FC = () => {
         setLoadingExtra(false);
       }
     } catch (error: any) {
-      setError(error.message || 'Erro ao buscar invocador. Verifique se o Riot ID está correto e tente novamente.');
+      // Capturar informações detalhadas do erro
+      setError({
+        message: error.message || 'Erro ao buscar invocador',
+        type: error.type || 'UNKNOWN',
+        suggestions: error.suggestions || ['Verifique se o Riot ID está correto e tente novamente']
+      });
     } finally {
       setLoading(false);
     }
@@ -170,15 +185,29 @@ const SimpleSummoner: React.FC = () => {
         </div>
         
         {error && (
-          <div className="error-message">
-            <span className="error-icon">⚠️</span>
-            <div className="error-content">
-              {error.split('\n').map((line, index) => (
-                <div key={index} className="error-line">
-                  {line}
-                </div>
-              ))}
+          <div className={`error-message error-${error.type?.toLowerCase()}`}>
+            <div className="error-header">
+              <span className="error-icon">
+                {error.type === 'NOT_FOUND' ? '🔍' : 
+                 error.type === 'FORBIDDEN' ? '🔒' : 
+                 error.type === 'RATE_LIMIT' ? '⏱️' : 
+                 error.type === 'CONNECTION_ERROR' ? '🔌' : 
+                 error.type === 'SERVER_ERROR' ? '🔥' : '⚠️'}
+              </span>
+              <div className="error-title">
+                <strong>{error.message}</strong>
+              </div>
             </div>
+            {error.suggestions && error.suggestions.length > 0 && (
+              <div className="error-suggestions">
+                <p className="suggestions-title">💡 Sugestões:</p>
+                <ul>
+                  {error.suggestions.map((suggestion, index) => (
+                    <li key={index}>{suggestion}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </div>

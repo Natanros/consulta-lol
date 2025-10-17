@@ -108,32 +108,76 @@ export const searchSummonerLocal = async (
 
     // Melhorar mensagens de erro para o usuário
     const errorMessage = error.message || error.toString();
+    const errorResponse = error.response;
 
-    if (errorMessage.includes("404")) {
-      throw new Error(
-        "Invocador não encontrado. Verifique se o Riot ID está correto."
-      );
-    } else if (errorMessage.includes("403")) {
-      throw new Error("Acesso negado. Verifique a chave da API.");
-    } else if (errorMessage.includes("429")) {
-      throw new Error(
-        "Muitas requisições. Tente novamente em alguns segundos."
-      );
-    } else if (errorMessage.includes("500")) {
-      throw new Error(
-        "Erro interno da API da Riot. Tente novamente mais tarde."
-      );
-    } else if (
-      errorMessage.includes("Failed to fetch") ||
-      errorMessage.includes("NetworkError")
-    ) {
-      throw new Error(
-        "Não foi possível conectar ao servidor proxy. Certifique-se de que ele está rodando em " +
-          PROXY_URL
-      );
+    // Erro de resposta HTTP
+    if (errorResponse) {
+      const status = errorResponse.status;
+
+      if (status === 404) {
+        const customError: any = new Error("Invocador não encontrado");
+        customError.type = "NOT_FOUND";
+        customError.suggestions = [
+          "Verifique se o nome do invocador está correto",
+          "Certifique-se de incluir a tag (ex: Nome#TAG)",
+          "Confirme se o invocador está na região BR1",
+        ];
+        throw customError;
+      } else if (status === 403) {
+        const customError: any = new Error("Acesso negado pela API da Riot");
+        customError.type = "FORBIDDEN";
+        customError.suggestions = [
+          "A chave da API pode estar inválida ou expirada",
+          "Chaves de desenvolvimento expiram em 24 horas",
+          "Verifique se a API key está configurada corretamente",
+        ];
+        throw customError;
+      } else if (status === 429) {
+        const customError: any = new Error("Limite de requisições excedido");
+        customError.type = "RATE_LIMIT";
+        customError.suggestions = [
+          "Aguarde alguns segundos antes de tentar novamente",
+          "A API da Riot tem limite de 20 req/segundo",
+          "Tente novamente em 1-2 minutos",
+        ];
+        throw customError;
+      } else if (status >= 500) {
+        const customError: any = new Error("Erro nos servidores da Riot Games");
+        customError.type = "SERVER_ERROR";
+        customError.suggestions = [
+          "Os servidores da Riot estão com problemas",
+          "Tente novamente em alguns minutos",
+          "Verifique o status em: status.riotgames.com",
+        ];
+        throw customError;
+      }
     }
 
-    throw new Error(errorMessage || "Erro desconhecido ao buscar invocador.");
+    // Erro de conexão
+    if (
+      errorMessage.includes("Failed to fetch") ||
+      errorMessage.includes("NetworkError") ||
+      errorMessage.includes("Network Error") ||
+      errorMessage.includes("ECONNREFUSED")
+    ) {
+      const customError: any = new Error(
+        "Não foi possível conectar ao servidor proxy"
+      );
+      customError.type = "CONNECTION_ERROR";
+      customError.suggestions = [
+        `Verifique se o servidor proxy está rodando em ${PROXY_URL}`,
+        "Execute: npm run proxy",
+        "Ou: npm run dev (para iniciar proxy + frontend)",
+      ];
+      throw customError;
+    }
+
+    // Erro genérico
+    const customError: any = new Error(
+      errorMessage || "Erro desconhecido ao buscar invocador"
+    );
+    customError.type = "UNKNOWN";
+    throw customError;
   }
 };
 
