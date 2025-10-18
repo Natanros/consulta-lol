@@ -23,25 +23,17 @@ const WeeklyRotation: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        console.log('🔄 Iniciando carregamento da rotação semanal...');
-
-        // Buscar dados da rotação
-        console.log('📡 Buscando dados da rotação...');
-        console.log('🔑 Chave da API:', process.env.REACT_APP_API_KEY ? 'Configurada' : 'Não configurada');
         
         const rotationData = await riotAPI.getChampionRotation();
-        console.log('✅ Dados da rotação recebidos:', rotationData);
         setRotation(rotationData);
 
         // Buscar dados detalhados dos campeões
-        console.log('🔍 Buscando dados dos campeões...');
         const championPromises = rotationData.freeChampionIds.map(async (id) => {
           try {
             const champData = await getChampionData(id);
-            console.log(`✅ Campeão ID ${id}:`, champData?.name || 'não encontrado');
             return champData;
           } catch (error) {
-            console.error(`❌ Erro ao buscar campeão ID ${id}:`, error);
+            console.error(`Erro ao buscar campeão ID ${id}:`, error);
             return null;
           }
         });
@@ -49,15 +41,13 @@ const WeeklyRotation: React.FC = () => {
         const newPlayerPromises = rotationData.freeChampionIdsForNewPlayers.map(async (id) => {
           try {
             const champData = await getChampionData(id);
-            console.log(`✅ Campeão novato ID ${id}:`, champData?.name || 'não encontrado');
             return champData;
           } catch (error) {
-            console.error(`❌ Erro ao buscar campeão novato ID ${id}:`, error);
+            console.error(`Erro ao buscar campeão novato ID ${id}:`, error);
             return null;
           }
         });
 
-        console.log('⏳ Aguardando dados dos campeões...');
         const [championData, newPlayerData] = await Promise.all([
           Promise.all(championPromises),
           Promise.all(newPlayerPromises)
@@ -67,18 +57,14 @@ const WeeklyRotation: React.FC = () => {
         const validChampions = championData.filter(champ => champ !== null);
         const validNewPlayerChampions = newPlayerData.filter(champ => champ !== null);
         
-        console.log(`✅ Campeões carregados: ${validChampions.length}/${rotationData.freeChampionIds.length}`);
-        console.log(`✅ Campeões novatos carregados: ${validNewPlayerChampions.length}/${rotationData.freeChampionIdsForNewPlayers.length}`);
-        
         setChampions(validChampions);
         setNewPlayerChampions(validNewPlayerChampions);
 
       } catch (err: any) {
-        console.error('💥 Erro ao carregar rotação:', err);
+        console.error('Erro ao carregar rotação:', err);
         setError(`Erro ao carregar a rotação semanal: ${err.message || 'Erro desconhecido'}`);
       } finally {
         setLoading(false);
-        console.log('🏁 Carregamento da rotação finalizado');
       }
     };
 

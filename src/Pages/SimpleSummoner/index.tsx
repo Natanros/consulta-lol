@@ -82,13 +82,9 @@ const SimpleSummoner: React.FC = () => {
         ]);
         
         // Processar maestrias com informações dos campeões
-        console.log('📊 Maestrias brutas:', masteriesData.slice(0, 5));
-        
         const masteriesWithChampions = await Promise.all(
           masteriesData.slice(0, 5).map(async (mastery: any) => {
-            console.log(`🔍 Buscando campeão ID: ${mastery.championId}`);
             const champion = await getChampionById(mastery.championId);
-            console.log(`✅ Resultado:`, champion);
             return {
               ...mastery,
               championName: champion?.name || `Campeão #${mastery.championId}`,
@@ -97,7 +93,6 @@ const SimpleSummoner: React.FC = () => {
           })
         );
         
-        console.log('🏆 Maestrias processadas:', masteriesWithChampions);
         setMasteries(masteriesWithChampions);
         
         // Buscar detalhes de cada partida

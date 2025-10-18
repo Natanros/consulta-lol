@@ -44,9 +44,6 @@ module.exports = async (req, res) => {
     endpoint = match ? match[1] : "";
   }
 
-  console.log(`📍 Endpoint recebido: ${endpoint}`);
-  console.log(`🔗 URL completa: ${req.url}`);
-
   try {
     // Health check
     if (endpoint === "health" || endpoint === "") {
@@ -141,16 +138,6 @@ module.exports = async (req, res) => {
     }
 
     // Endpoint não encontrado
-    console.log(`❌ Endpoint não encontrado: ${endpoint}`);
-    console.log(`📋 Endpoints disponíveis:`);
-    console.log(`   - health`);
-    console.log(`   - account/:gameName/:tagLine`);
-    console.log(`   - summoner/by-puuid/:puuid`);
-    console.log(`   - rotation`);
-    console.log(`   - champion-mastery/:puuid`);
-    console.log(`   - match-history/:puuid`);
-    console.log(`   - match/:matchId`);
-
     return res.status(404).json({
       error: "Endpoint não encontrado",
       path: endpoint,

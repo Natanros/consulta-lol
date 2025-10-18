@@ -29,11 +29,10 @@ const fetchChampionData = async () => {
     );
     if (response.ok) {
       const data = await response.json();
-      console.log("✅ Dados dos campeões obtidos diretamente");
       return data;
     }
   } catch (error) {
-    console.log("⚠️ Fetch direto falhou, tentando proxy...");
+    // Continuar para próxima estratégia
   }
 
   // Estratégia 2: Usar proxy AllOrigins como backup
@@ -48,28 +47,23 @@ const fetchChampionData = async () => {
       const result = await response.json();
       if (result.contents) {
         const data = JSON.parse(result.contents);
-        console.log("✅ Dados dos campeões obtidos via proxy");
         return data;
       }
     }
   } catch (error) {
-    console.log("⚠️ Proxy AllOrigins falhou:", error);
+    console.error("Erro ao buscar dados dos campeões:", error);
   }
 
   throw new Error("Não foi possível obter dados dos campeões");
 };
 
 export const getRotation = async (): Promise<WeeklyRotationData> => {
-  console.log("🔄 Buscando rotação semanal de campeões...");
-
   try {
     // Buscar dados da rotação da API
     const rotationData = await getWeeklyRotation();
-    console.log("✅ Dados da rotação obtidos:", rotationData);
 
     // Buscar dados dos campeões da Data Dragon API
     const championData = await fetchChampionData();
-    console.log("✅ Dados dos campeões obtidos");
 
     // Mapear IDs para dados dos campeões
     const champions: RotationChampion[] = rotationData.freeChampionIds.map(
@@ -79,7 +73,6 @@ export const getRotation = async (): Promise<WeeklyRotationData> => {
         );
 
         if (!champion) {
-          console.warn(`⚠️ Campeão com ID ${id} não encontrado`);
           return {
             id,
             name: `Campeão ${id}`,
@@ -141,12 +134,9 @@ export const getRotation = async (): Promise<WeeklyRotationData> => {
       newPlayerChampions,
     };
 
-    console.log(
-      `🎉 Rotação obtida com sucesso! ${champions.length} campeões na rotação`
-    );
     return result;
   } catch (error: any) {
-    console.error("❌ Erro ao buscar rotação:", error);
+    console.error("Erro ao buscar rotação:", error);
 
     // Melhorar mensagens de erro
     if (error.message.includes("404")) {

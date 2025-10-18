@@ -23,17 +23,10 @@ const isProduction =
   window.location.hostname !== "127.0.0.1";
 const isLocalDevelopment = !isProduction;
 
-console.log(
-  `🌍 Ambiente detectado: ${
-    isProduction ? "PRODUÇÃO (Vercel)" : "DESENVOLVIMENTO (Localhost)"
-  }`
-);
-
 // Função para verificar disponibilidade do proxy local
 const isProxyAvailable = async (): Promise<boolean> => {
   // Em produção (Vercel), NUNCA usar proxy local
   if (isProduction) {
-    console.log("🌐 Ambiente de produção detectado - usando APIs públicas");
     return false;
   }
 
@@ -48,16 +41,8 @@ const isProxyAvailable = async (): Promise<boolean> => {
   try {
     proxyAvailable = await checkProxyHealth();
     lastProxyCheck = now;
-
-    if (proxyAvailable) {
-      console.log("✅ Proxy local disponível - usando proxy local");
-    } else {
-      console.log("⚠️ Proxy local não disponível - usando APIs públicas");
-    }
-
     return proxyAvailable;
   } catch (error) {
-    console.log("⚠️ Erro ao verificar proxy local - usando APIs públicas");
     proxyAvailable = false;
     lastProxyCheck = now;
     return false;
@@ -68,11 +53,9 @@ const isProxyAvailable = async (): Promise<boolean> => {
 export const searchSummoner = async (riotId: string) => {
   // Em produção (Vercel), usar API Vercel
   if (isProduction) {
-    console.log("🚀 Usando API Vercel para buscar invocador");
     try {
       return await searchSummonerVercel(riotId);
     } catch (error) {
-      console.log("⚠️ Erro na API Vercel, tentando APIs públicas...");
       return await searchSummonerPublic(riotId);
     }
   }
@@ -81,10 +64,8 @@ export const searchSummoner = async (riotId: string) => {
   const useLocalProxy = await isProxyAvailable();
 
   if (useLocalProxy) {
-    console.log("🚀 Usando proxy local para buscar invocador");
     return await searchSummonerLocal(riotId);
   } else {
-    console.log("🌐 Usando APIs públicas para buscar invocador");
     return await searchSummonerPublic(riotId);
   }
 };
@@ -93,11 +74,9 @@ export const searchSummoner = async (riotId: string) => {
 export const getWeeklyRotation = async () => {
   // Em produção (Vercel), usar API Vercel
   if (isProduction) {
-    console.log("🚀 Usando API Vercel para buscar rotação");
     try {
       return await getWeeklyRotationVercel();
     } catch (error) {
-      console.log("⚠️ Erro na API Vercel, tentando APIs públicas...");
       return await getWeeklyRotationPublic();
     }
   }
@@ -106,10 +85,8 @@ export const getWeeklyRotation = async () => {
   const useLocalProxy = await isProxyAvailable();
 
   if (useLocalProxy) {
-    console.log("🚀 Usando proxy local para buscar rotação");
     return await getWeeklyRotationLocal();
   } else {
-    console.log("🌐 Usando APIs públicas para buscar rotação");
     return await getWeeklyRotationPublic();
   }
 };

@@ -18,9 +18,6 @@ interface SummonerData {
 
 // Função para buscar dados com o proxy local
 const fetchWithLocalProxy = async (endpoint: string) => {
-  console.log(`🌐 Fazendo requisição para proxy local: ${endpoint}`);
-  console.log(`📍 URL do proxy: ${PROXY_URL}`);
-
   try {
     const response = await fetch(`${PROXY_URL}${endpoint}`, {
       method: "GET",
@@ -37,10 +34,9 @@ const fetchWithLocalProxy = async (endpoint: string) => {
     }
 
     const data = await response.json();
-    console.log("✅ Resposta recebida do proxy local");
     return data;
   } catch (error: any) {
-    console.error("❌ Erro ao comunicar com proxy local:", error);
+    console.error("Erro ao comunicar com proxy local:", error);
 
     // Se for erro de conexão recusada, mensagem mais clara
     if (error.name === "TypeError" && error.message.includes("fetch")) {
@@ -61,12 +57,8 @@ export const searchSummonerLocal = async (
     throw new Error("Formato do Riot ID inválido. Use o formato: Nome#Tag");
   }
 
-  console.log(`🔍 [LOCAL PROXY] Buscando invocador: ${riotId}`);
-  console.log(`📍 [LOCAL PROXY] Usando proxy URL: ${PROXY_URL}`);
-
   try {
     // Passo 1: Buscar dados da conta pelo Riot ID
-    console.log("📡 [LOCAL PROXY] Buscando dados da conta...");
     const accountData = await fetchWithLocalProxy(
       `/api/account/${encodeURIComponent(gameName)}/${encodeURIComponent(
         tagLine
@@ -77,31 +69,15 @@ export const searchSummonerLocal = async (
       throw new Error("Conta não encontrada. Verifique o Riot ID.");
     }
 
-    console.log("✅ Conta encontrada:", {
-      gameName: accountData.gameName,
-      tagLine: accountData.tagLine,
-      puuid: accountData.puuid,
-    });
-
     // Passo 2: Buscar dados do invocador pelo PUUID
-    console.log("📡 Buscando dados do invocador...");
     const summonerData = await fetchWithLocalProxy(
       `/api/summoner/by-puuid/${accountData.puuid}`
     );
 
-    console.log("📦 Raw summonerData recebido:", summonerData);
-
     if (!summonerData || !summonerData.summonerLevel) {
-      console.error("❌ Dados inválidos:", summonerData);
+      console.error("Dados inválidos recebidos:", summonerData);
       throw new Error("Dados do invocador não encontrados.");
     }
-
-    console.log("✅ Dados do invocador obtidos:", {
-      level: summonerData.summonerLevel,
-      icon: summonerData.profileIconId,
-      id: summonerData.id,
-      accountId: summonerData.accountId,
-    });
 
     // Retornar dados estruturados
     const result: SummonerData = {
@@ -114,11 +90,9 @@ export const searchSummonerLocal = async (
         summonerData.accountId || summonerData.id || summonerData.puuid,
     };
 
-    console.log("🎉 Busca concluída com sucesso!");
-    console.log("📦 Dados que serão retornados:", result);
     return result;
   } catch (error: any) {
-    console.error("❌ Erro na busca do invocador:", error);
+    console.error("Erro na busca do invocador:", error);
 
     // Melhorar mensagens de erro para o usuário
     const errorMessage = error.message || error.toString();
@@ -197,8 +171,6 @@ export const searchSummonerLocal = async (
 
 // Função para buscar rotação semanal via proxy local
 export const getWeeklyRotationLocal = async () => {
-  console.log("🔍 Buscando rotação semanal via proxy local");
-
   try {
     const data = await fetchWithLocalProxy("/api/rotation");
 
@@ -206,10 +178,9 @@ export const getWeeklyRotationLocal = async () => {
       throw new Error("Dados de rotação inválidos");
     }
 
-    console.log(`✅ Rotação obtida - ${data.freeChampionIds.length} campeões`);
     return data;
   } catch (error: any) {
-    console.error("❌ Erro ao buscar rotação:", error);
+    console.error("Erro ao buscar rotação:", error);
     throw error;
   }
 };
@@ -232,8 +203,6 @@ export const isValidRiotId = (riotId: string): boolean => {
 // Função para verificar se o proxy local está disponível
 export const checkProxyHealth = async (): Promise<boolean> => {
   try {
-    console.log(`🔍 Verificando saúde do proxy em: ${PROXY_URL}/health`);
-
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 segundos timeout
 
@@ -244,15 +213,10 @@ export const checkProxyHealth = async (): Promise<boolean> => {
     });
 
     clearTimeout(timeoutId);
-
-    const isHealthy = response.ok;
-    console.log(`🏥 Proxy health check: ${isHealthy ? "✅ OK" : "❌ FALHOU"}`);
-    return isHealthy;
+    return response.ok;
   } catch (error: any) {
-    if (error.name === "AbortError") {
-      console.error("⏱️ Timeout ao verificar proxy local (não está rodando)");
-    } else {
-      console.error("❌ Proxy local não está disponível:", error.message);
+    if (error.name !== "AbortError") {
+      console.error("Proxy local não está disponível:", error.message);
     }
     return false;
   }

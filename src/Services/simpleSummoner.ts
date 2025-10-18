@@ -90,12 +90,9 @@ const fetchWithTimeout = async (
 
 // Função para buscar dados usando uma API proxy funcional
 const fetchWithProxy = async (url: string) => {
-  console.log(`🌐 Fazendo requisição para: ${url}`);
-
   // Tentar cada proxy em sequência
   for (const proxy of CORS_PROXIES) {
     try {
-      console.log(`🔄 Tentando proxy: ${proxy.name}`);
       const proxyUrl = proxy.buildUrl(url);
 
       const response = await fetchWithTimeout(
@@ -111,8 +108,6 @@ const fetchWithProxy = async (url: string) => {
       );
 
       if (!response.ok) {
-        const errorText = await response.text().catch(() => "");
-        console.log(`Resposta do ${proxy.name}:`, errorText.substring(0, 200));
         throw new Error(`${proxy.name} retornou status ${response.status}`);
       }
 
@@ -123,10 +118,8 @@ const fetchWithProxy = async (url: string) => {
         throw new Error(`${proxy.name} retornou dados inválidos`);
       }
 
-      console.log(`✅ Sucesso com ${proxy.name}`, data);
       return data;
     } catch (error: any) {
-      console.log(`⚠️ ${proxy.name} falhou:`, error.message);
       // Pequena pausa antes de tentar o próximo proxy
       await new Promise((resolve) => setTimeout(resolve, 300));
     }
@@ -134,7 +127,6 @@ const fetchWithProxy = async (url: string) => {
 
   // Se todos os proxies falharem, tentar requisição direta (pode funcionar em alguns ambientes)
   try {
-    console.log("🔄 Tentando requisição direta (sem proxy)...");
     const urlWithKey = `${url}?api_key=${API_KEY}`;
     const response = await fetchWithTimeout(
       urlWithKey,
@@ -149,11 +141,10 @@ const fetchWithProxy = async (url: string) => {
 
     if (response.ok) {
       const data = await response.json();
-      console.log("✅ Sucesso com requisição direta");
       return data;
     }
   } catch (error) {
-    console.log("⚠️ Requisição direta falhou:", error);
+    // Todos os métodos falharam
   }
 
   throw new Error(
@@ -175,11 +166,8 @@ export const searchSummoner = async (riotId: string): Promise<SummonerData> => {
     );
   }
 
-  console.log(`�� Buscando invocador: ${riotId}`);
-
   try {
     // Passo 1: Buscar dados da conta pelo Riot ID
-    console.log("📡 Buscando dados da conta...");
     const accountUrl = `${BASE_URL_AMERICAS}/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(
       gameName
     )}/${encodeURIComponent(tagLine)}`;
@@ -189,25 +177,13 @@ export const searchSummoner = async (riotId: string): Promise<SummonerData> => {
       throw new Error("Conta não encontrada. Verifique o Riot ID.");
     }
 
-    console.log("✅ Conta encontrada:", {
-      gameName: accountData.gameName,
-      tagLine: accountData.tagLine,
-      puuid: accountData.puuid,
-    });
-
     // Passo 2: Buscar dados do invocador pelo PUUID
-    console.log("📡 Buscando dados do invocador...");
     const summonerUrl = `${BASE_URL_BR}/lol/summoner/v4/summoners/by-puuid/${accountData.puuid}`;
     const summonerData = await fetchWithProxy(summonerUrl);
 
     if (!summonerData || !summonerData.id) {
       throw new Error("Dados do invocador não encontrados.");
     }
-
-    console.log("✅ Dados do invocador obtidos:", {
-      level: summonerData.summonerLevel,
-      icon: summonerData.profileIconId,
-    });
 
     // Retornar dados estruturados
     const result: SummonerData = {
@@ -219,10 +195,9 @@ export const searchSummoner = async (riotId: string): Promise<SummonerData> => {
       accountId: summonerData.accountId,
     };
 
-    console.log("🎉 Busca concluída com sucesso!");
     return result;
   } catch (error: any) {
-    console.error("❌ Erro na busca do invocador:", error);
+    console.error("Erro na busca do invocador:", error);
 
     // Melhorar mensagens de erro para o usuário
     const errorMessage = error.message || error.toString();
