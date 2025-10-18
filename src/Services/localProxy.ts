@@ -1,9 +1,10 @@
 // Serviço para consulta de invocador usando proxy local
 // Em produção (Vercel), usar o próprio domínio. Em desenvolvimento, localhost
-const PROXY_URL = process.env.REACT_APP_PROXY_URL || 
-  (process.env.NODE_ENV === 'production' 
-    ? '' // Em produção, usar o mesmo domínio (rotas relativas)
-    : 'http://localhost:3001'); // Em desenvolvimento, usar proxy local
+const PROXY_URL =
+  process.env.REACT_APP_PROXY_URL ||
+  (process.env.NODE_ENV === "production"
+    ? "" // Em produção, usar o mesmo domínio (rotas relativas)
+    : "http://localhost:3001"); // Em desenvolvimento, usar proxy local
 
 // Interface para dados do invocador
 interface SummonerData {
